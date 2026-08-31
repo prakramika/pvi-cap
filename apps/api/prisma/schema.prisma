@@ -1,0 +1,271 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EXPERT
+  RESPONDENT
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum AssessmentStage {
+  EARLY_CHILDHOOD
+  PRE_SKILL
+  BASIC
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTI_CHOICE
+  SCALE
+  FREE_TEXT
+}
+
+enum InstanceStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  UNDER_REVIEW
+  REVIEWED
+}
+
+enum ReviewStatus {
+  PENDING
+  IN_REVIEW
+  COMPLETED
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+model User {
+  id            String        @id @default(uuid())
+  email         String        @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  role          Role
+  accountStatus AccountStatus @default(ACTIVE)
+  lastLoginAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  learner       Learner?
+  refreshTokens RefreshToken[]
+  reviews       Review[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+}
+
+model Learner {
+  id               String           @id @default(uuid())
+  userId           String           @unique
+  displayName      String
+  dateOfBirth      DateTime         @db.Date
+  assignedStage    AssessmentStage
+  stageOverridden  Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessments AssessmentInstance[]
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model EmailOtp {
+  id         String    @id @default(uuid())
+  email      String
+  purpose    String
+  codeHash   String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([email, purpose])
+}
+
+model AssessmentTool {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  name            String
+  description     String
+  indicatorCount  Int
+  isStageBased    Boolean
+  sortOrder       Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  sections  AssessmentSection[]
+  questions Question[]
+  instances AssessmentInstance[]
+}
+
+model AssessmentSection {
+  id        String   @id @default(uuid())
+  toolId    String
+  title     String
+  sortOrder Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tool      AssessmentTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@unique([toolId, sortOrder])
+}
+
+model Question {
+  id            String       @id @default(uuid())
+  toolId        String
+  sectionId     String
+  indicatorCode String
+  prompt        String
+  type          QuestionType
+  sortOrder     Int
+  isQualitative Boolean      @default(false)
+  scoringNotes  String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  tool      AssessmentTool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  section   AssessmentSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  options   AnswerOption[]
+  stages    QuestionStage[]
+  responses Response[]
+
+  @@unique([toolId, indicatorCode])
+  @@index([sectionId, sortOrder])
+}
+
+model QuestionStage {
+  questionId String
+  stage      AssessmentStage
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, stage])
+}
+
+model AnswerOption {
+  id        String   @id @default(uuid())
+  questionId String
+  label     String
+  value     String
+  sortOrder Int
+
+  question  Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  responses Response[]
+
+  @@unique([questionId, sortOrder])
+}
+
+model AssessmentInstance {
+  id              String           @id @default(uuid())
+  learnerId       String
+  toolId          String
+  stage           AssessmentStage
+  status          InstanceStatus   @default(NOT_STARTED)
+  progressPercent Int              @default(0)
+  startedAt       DateTime?
+  submittedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  learner   Learner         @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  tool      AssessmentTool  @relation(fields: [toolId], references: [id], onDelete: Restrict)
+  responses Response[]
+  review    Review?
+
+  @@unique([learnerId, toolId])
+  @@index([status, submittedAt])
+}
+
+model Response {
+  id         String   @id @default(uuid())
+  instanceId String
+  questionId String
+  optionId   String?
+  freeText   String?
+  savedAt    DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  instance AssessmentInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  question Question           @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  option   AnswerOption?      @relation(fields: [optionId], references: [id], onDelete: SetNull)
+
+  @@unique([instanceId, questionId])
+}
+
+model Review {
+  id         String       @id @default(uuid())
+  instanceId String       @unique
+  reviewerId String
+  status     ReviewStatus @default(PENDING)
+  notes      String?
+  reviewedAt DateTime?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  instance AssessmentInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  reviewer User               @relation(fields: [reviewerId], references: [id], onDelete: Restrict)
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String             @id @default(uuid())
+  userId    String
+  type      String
+  subject   String
+  body      String
+  status    NotificationStatus @default(QUEUED)
+  sentAt    DateTime?
+  error     String?
+  createdAt DateTime           @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}

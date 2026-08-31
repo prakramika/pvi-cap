@@ -1,0 +1,28 @@
+{
+  "name": "pvi-cap",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PVI-CAP Digital Career Assessment Platform — Phase 1",
+  "type": "module",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "provision": "node notion/provision.mjs",
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:api": "npm run dev -w @pvi-cap/api",
+    "dev:web": "npm run dev -w @pvi-cap/web",
+    "db:up": "docker compose up -d postgres",
+    "db:migrate": "npm run prisma:migrate -w @pvi-cap/api",
+    "db:seed": "npm run prisma:seed -w @pvi-cap/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm test -w @pvi-cap/api"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@notionhq/client": "^5.14.0"
+  }
+}

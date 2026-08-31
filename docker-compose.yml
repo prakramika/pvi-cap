@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pvi-cap-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pvi
+      POSTGRES_PASSWORD: pvi
+      POSTGRES_DB: pvi_cap
+    ports:
+      - "5432:5432"
+    volumes:
+      - pvi_cap_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pvi -d pvi_cap"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pvi_cap_pg:

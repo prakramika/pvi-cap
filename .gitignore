@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+notion/.provisioned.json
+*.log
+.DS_Store
+Thumbs.db
+apps/web/dist
+apps/api/dist
+apps/api/generated
+coverage/
+*.tsbuildinfo
