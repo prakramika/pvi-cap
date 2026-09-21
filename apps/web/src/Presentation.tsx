@@ -69,18 +69,29 @@ const SAMPLE_QUESTIONS = [
   },
 ];
 
+const PRESENT_ONLY = import.meta.env.VITE_PRESENT_ONLY === "true";
+
 function parseStep(): StepId {
   const ids = STEPS.map((step) => step.id);
-  const hash = window.location.hash.match(/^#\/present(?:\/([a-z0-9-]+))?/i);
-  if (hash?.[1] && ids.includes(hash[1] as StepId)) return hash[1] as StepId;
-  const path = window.location.pathname.match(/\/present(?:\/([a-z0-9-]+))?/i);
-  if (path?.[1] && ids.includes(path[1] as StepId)) return path[1] as StepId;
+  const hashValue = window.location.hash.replace(/^#\/?/, "");
+  const hashId = hashValue.replace(/^present\/?/, "").split("/")[0];
+  if (hashId && ids.includes(hashId as StepId)) return hashId as StepId;
+  if (!PRESENT_ONLY) {
+    const path = window.location.pathname.match(/\/present(?:\/([a-z0-9-]+))?/i);
+    if (path?.[1] && ids.includes(path[1] as StepId)) return path[1] as StepId;
+  }
   return "overview";
 }
 
 function writeStep(id: StepId) {
+  if (PRESENT_ONLY) {
+    const next = `#/${id}`;
+    if (window.location.hash === next) return;
+    window.history.pushState({ present: id }, "", next);
+    return;
+  }
   const next = `/present/${id}`;
-  if (`${window.location.pathname}${window.location.hash}` === next) return;
+  if (window.location.pathname === next) return;
   window.history.pushState({ present: id }, "", next);
 }
 
@@ -157,7 +168,9 @@ export function Presentation() {
     const sync = () => setStepId(parseStep());
     window.addEventListener("popstate", sync);
     window.addEventListener("hashchange", sync);
-    if (!window.location.pathname.startsWith("/present")) {
+    if (PRESENT_ONLY) {
+      if (!window.location.hash) writeStep(parseStep());
+    } else if (!window.location.pathname.startsWith("/present")) {
       writeStep(parseStep());
     }
     return () => {
