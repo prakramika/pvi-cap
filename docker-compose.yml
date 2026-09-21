@@ -17,5 +17,14 @@ services:
       timeout: 5s
       retries: 10
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: pvi-cap-mailpit
+    profiles: ["mail"]
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
 volumes:
   pvi_cap_pg:

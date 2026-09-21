@@ -21,43 +21,49 @@ reports are **out of scope**.
 ```
 apps/api     Express API + Prisma schema
 apps/web     React app
-docs/        M1 architecture and ER diagram
+docs/        Architecture, APIs, local test procedure
+scripts/     Local Postgres bootstrap SQL
 notion/      Client project-management workspace provisioner
 ```
 
-## Local setup (Milestone 1)
+## Local setup
 
-1. Copy `.env.example` to `.env`.
-2. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) if it is missing, then start Postgres:
+Exact click-through for this Windows laptop: **[docs/local-test.md](docs/local-test.md)**.
 
-```bash
-npm run db:up
-```
+This machine uses native PostgreSQL 18 (Docker Desktop is not installed; C: is too
+full). Create the `pvi` role and `pvi_cap` database once (SQL in
+`scripts/bootstrap-local-pg.sql`). In each terminal, point temp at D: first
+(`$env:TEMP="D:\pvi\tmp"`; see [docs/local-test.md](docs/local-test.md)), then:
 
-3. Install, migrate, and seed the six tools (not the 1,964 questions — that is M3):
-
-```bash
+```powershell
 npm install
 npm run db:migrate
 npm run db:seed
-```
-
-4. Run the apps (two terminals):
-
-```bash
 npm run dev:api
-npm run dev:web
 ```
+
+Second terminal: `npm run dev:web`
 
 - API health: http://localhost:4000/health
-- Web: http://localhost:5173 (sign in as `admin@pvi.local` / `ChangeMe_admin1` after seed)
+- Web: http://localhost:5173
 
-Architecture, ER diagram, and M2 APIs:
+Demo accounts:
 
+- Family (Aarav, Basic): `respondent@pvi.local` / `Respondent1`
+- Family (Anaya, Early Childhood): `early@pvi.local` / `Respondent1`
+- Admin: `admin@gmail.com` / `Admin12345a`
+
+Architecture, ER diagram, APIs, and the family click-through:
+
+- [docs/admin.md](docs/admin.md) — send form, children/answers, question bank
+- [docs/user-journey.md](docs/user-journey.md) — parent / teacher / caregiver / child (source of truth for the user side)
+- [docs/mailpit.md](docs/mailpit.md) — local fake inbox
+- [docs/aws.md](docs/aws.md) — AWS (RDS, SES, Docker)
 - [docs/architecture.md](docs/architecture.md)
 - [docs/er-diagram.md](docs/er-diagram.md)
 - [docs/installation.md](docs/installation.md)
 - [docs/api-m2.md](docs/api-m2.md)
+- [docs/local-test.md](docs/local-test.md)
 
 ## Project management
 
@@ -68,9 +74,9 @@ Weekly status, milestones, and the client portal live in Notion. See
 
 | Milestone | Work |
 |---|---|
-| M3 | Import PVI’s 1,964 indicators |
-| M4 | Respondent assessment UI (next invoice) |
-| M5 | Admin dashboard |
+| M3 | Import PVI’s real 1,964 indicators (blocked on their spreadsheet) |
+| M4 | Respondent take-flow — live question bank from `data/pvi-cap-questions.csv` |
+| M5 | Admin/expert review desk — sample UI is in; polish Annexure B filters |
 | M6 | Audit, backups, email templates |
 | M7 | Tests and UAT |
 | M8 | Production deploy and handover |

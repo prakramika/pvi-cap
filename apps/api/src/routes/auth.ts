@@ -7,7 +7,9 @@ import {
   loginBody,
   logoutBody,
   refreshBody,
+  resendLoginOtpBody,
   resetPasswordBody,
+  verifyLoginOtpBody,
 } from "../lib/schemas.js";
 import { requireAuth } from "../middleware/auth.js";
 import { asyncHandler, validateBody } from "../middleware/validate.js";
@@ -29,9 +31,29 @@ authRouter.post(
   authWindow,
   validateBody(loginBody),
   asyncHandler(async (req, res) => {
-    const body = req.body as { email: string; password: string };
+    const body = req.body as { email: string; password: string; familyRole?: "PARENT" | "TEACHER" | "CAREGIVER" | "CHILD" };
     const result = await auth.login({ ...body, ip: clientIp(req) });
     res.json(result);
+  }),
+);
+
+authRouter.post(
+  "/verify-login-otp",
+  authWindow,
+  validateBody(verifyLoginOtpBody),
+  asyncHandler(async (req, res) => {
+    const body = req.body as { email: string; code: string; familyRole?: "PARENT" | "TEACHER" | "CAREGIVER" | "CHILD" };
+    res.json(await auth.verifyLoginOtp({ ...body, ip: clientIp(req) }));
+  }),
+);
+
+authRouter.post(
+  "/resend-login-otp",
+  authWindow,
+  validateBody(resendLoginOtpBody),
+  asyncHandler(async (req, res) => {
+    const body = req.body as { email: string; familyRole?: "PARENT" | "TEACHER" | "CAREGIVER" | "CHILD" };
+    res.json(await auth.resendLoginOtp(body.email, body.familyRole, clientIp(req)));
   }),
 );
 

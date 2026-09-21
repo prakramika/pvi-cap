@@ -11,7 +11,7 @@ This document describes how Phase 1 will be built. It does not add scoring, in-a
 
 Digitise PVI’s six proprietary assessment tools (~1,964 indicators) into a secure, role-based web application so that:
 
-- a **respondent** can log in, complete assigned assessments (section by section, with auto-save and progress), and submit
+- a **parent, teacher, caregiver, or child** can sign in (one family login per child), complete the child profile, then finish six assessment sections in order, and resume later
 - an **admin / expert** can manage users, review submissions, and filter by the ten agreed fields
 - PVI receives source code, schema, APIs, and a live HTTPS deployment at handover
 
@@ -21,9 +21,11 @@ Scoring, interpretation, and report writing remain **manual** in Phase 1.
 
 | Role | Who | What they can do |
 |---|---|---|
-| Respondent | Parent / caregiver / learner operator | One learner profile; take assessments; see own progress |
+| Family login (`RESPONDENT` in the database) | Parent, teacher, caregiver, or child — chosen at sign-in | One child profile; six assessment sections in order; resume; no scores |
 | Expert | PVI practitioner | Review submitted assessments; notes; post-review email |
-| Admin | PVI operator | Users, account status, stage override, all expert capabilities, audit visibility |
+| Admin | PVI operator | Enrol a child; users; stage override; all expert capabilities |
+
+One child profile per family account. See [user-journey.md](user-journey.md) for the parent/teacher click-through.
 
 One learner per respondent account (Annexure B).
 

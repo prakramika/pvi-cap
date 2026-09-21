@@ -16,6 +16,7 @@
     "db:up": "docker compose up -d postgres",
     "db:migrate": "npm run prisma:migrate -w @pvi-cap/api",
     "db:seed": "npm run prisma:seed -w @pvi-cap/api",
+    "mail:up": "powershell -NoProfile -File scripts/start-mailpit.ps1",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm test -w @pvi-cap/api"
   },

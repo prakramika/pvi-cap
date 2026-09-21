@@ -14,18 +14,38 @@ function required(name: string, fallback?: string): string {
   return value;
 }
 
+function envInt(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw === "") return fallback;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function envBool(name: string, fallback: boolean): boolean {
+  const raw = process.env[name];
+  if (raw === undefined || raw === "") return fallback;
+  return ["1", "true", "yes", "on"].includes(raw.toLowerCase());
+}
+
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
-  port: Number(process.env.API_PORT ?? 4000),
+  port: envInt("API_PORT", 4000),
   databaseUrl: required("DATABASE_URL", "postgresql://pvi:pvi@localhost:5432/pvi_cap"),
   jwtAccessSecret: required("JWT_ACCESS_SECRET", "dev-access-secret-change-me"),
   jwtRefreshSecret: required("JWT_REFRESH_SECRET", "dev-refresh-secret-change-me"),
   corsOrigin: process.env.WEB_ORIGIN ?? "http://localhost:5173",
-  smtpHost: process.env.SMTP_HOST,
-  smtpPort: Number(process.env.SMTP_PORT ?? 587),
-  smtpUser: process.env.SMTP_USER,
-  smtpPass: process.env.SMTP_PASS,
-  emailFrom: process.env.EMAIL_FROM ?? "PVI-CAP <noreply@localhost>",
+  smtp: {
+    host: process.env.SMTP_HOST || "localhost",
+    port: envInt("SMTP_PORT", 1025),
+    secure: envBool("SMTP_SECURE", false),
+    user: process.env.SMTP_USER || "",
+    pass: process.env.SMTP_PASS || "",
+    from: process.env.SMTP_FROM || process.env.EMAIL_FROM || "noreply@localhost",
+  },
+  emailReplyTo: process.env.EMAIL_REPLY_TO ?? "info.prakramika@gmail.com",
+  instituteUrl: process.env.INSTITUTE_URL ?? "https://prakramikavocationalinstitute.com/",
 };
 
 export const isProd = env.nodeEnv === "production";
+/** SMTP_HOST unset → demo inbox on screen. localhost:1025 is Mailpit when you turn that on. */
+export const fakeMail = !process.env.SMTP_HOST && !isProd;

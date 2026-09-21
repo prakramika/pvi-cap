@@ -36,9 +36,18 @@ erDiagram
   Learner {
     uuid id PK
     uuid userId FK
+    string displayName
     date dateOfBirth
     enum assignedStage
     boolean stageOverridden
+    enum lastFamilyRole "PARENT TEACHER CAREGIVER CHILD"
+    string gender
+    string diagnosis
+    string schoolName
+    string city
+    string teacherEmail
+    string caregiverEmail
+    datetime profileCompletedAt
   }
 
   AssessmentTool {
@@ -59,6 +68,7 @@ erDiagram
     uuid id PK
     uuid learnerId FK
     uuid toolId FK
+    enum familyRole "PARENT TEACHER CAREGIVER CHILD"
     enum status
     int progressPercent
   }
@@ -102,7 +112,7 @@ HDMA and VLAP ignore stage filters (all questions). III, CALP, FSIC, and BWRS us
 ## Phase 1 constraints encoded in the schema
 
 - `Learner.userId` is unique — one learner per respondent.
-- `AssessmentInstance` uniqueness `(learnerId, toolId)` — one active sitting per tool (no version history).
+- `AssessmentInstance` uniqueness `(learnerId, toolId, familyRole)` — one sitting per child, tool, and filler (parent / teacher / caregiver / child). Existing rows migrate as Parent.
 - `Response` uniqueness `(instanceId, questionId)` — auto-save overwrites the same row.
 - `Review` is 1:1 with an instance.
 - `scoringNotes` on questions is stored for PVI’s methodology; the API will not use it to score in Phase 1.

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { HttpError, clientIp, paramId } from "../lib/http.js";
-import { updateLearnerBody } from "../lib/schemas.js";
+import { completeChildProfileBody, updateLearnerBody } from "../lib/schemas.js";
 import { requireAdmin, requireAuth, requireStaff } from "../middleware/auth.js";
 import { asyncHandler, validateBody } from "../middleware/validate.js";
 import * as learners from "../services/learner-service.js";
@@ -12,9 +12,22 @@ learnersRouter.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     if (req.auth!.role !== "RESPONDENT") {
-      throw new HttpError(403, "FORBIDDEN", "Only respondent accounts have a learner profile.");
+      throw new HttpError(403, "FORBIDDEN", "Only family accounts have a child profile.");
     }
     res.json({ learner: await learners.getLearnerForUser(req.auth!.userId) });
+  }),
+);
+
+learnersRouter.patch(
+  "/me",
+  requireAuth,
+  validateBody(completeChildProfileBody),
+  asyncHandler(async (req, res) => {
+    if (req.auth!.role !== "RESPONDENT") {
+      throw new HttpError(403, "FORBIDDEN", "Only family accounts have a child profile.");
+    }
+    const learner = await learners.completeChildProfile(req.auth!.userId, req.body, clientIp(req));
+    res.json({ learner });
   }),
 );
 

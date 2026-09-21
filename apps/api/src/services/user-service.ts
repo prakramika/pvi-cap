@@ -1,8 +1,8 @@
-import { Prisma, Role } from "@prisma/client";
+import { Prisma, Role, type RespondentRelation } from "@prisma/client";
 import { HttpError } from "../lib/http.js";
 import { hashPassword } from "../lib/password.js";
 import { writeAudit } from "../lib/audit.js";
-import { sendWelcomeEmail } from "../lib/mailer.js";
+import { sendEnrolmentEmail, sendStaffWelcomeEmail, demoInbox } from "../lib/mailer.js";
 import { publicUser } from "../lib/serialize.js";
 import { stageFromDob } from "../domain/stage.js";
 import { prisma } from "../lib/prisma.js";
@@ -27,6 +27,7 @@ export async function createUser(
     role: Role;
     displayName?: string;
     dateOfBirth?: string;
+    respondentRelation?: RespondentRelation;
   },
   actorId: string,
   ip?: string,
@@ -57,6 +58,7 @@ export async function createUser(
           displayName: input.displayName,
           dateOfBirth,
           assignedStage: stageFromDob(dateOfBirth),
+          respondentRelation: input.respondentRelation ?? "PARENT",
         },
       });
     }
@@ -76,13 +78,41 @@ export async function createUser(
     ipAddress: ip,
   });
 
+  let enrolmentEmailSent = false;
   try {
-    await sendWelcomeEmail(user.email, user.firstName, user.id);
+    if (user.role === Role.RESPONDENT && user.learner) {
+      await sendEnrolmentEmail({
+        to: user.email,
+        respondentFirstName: user.firstName,
+        learnerName: user.learner.displayName,
+        relation: user.learner.respondentRelation,
+        username: user.email,
+        password: input.password,
+        userId: user.id,
+      });
+    } else {
+      await sendStaffWelcomeEmail(user.email, user.firstName, user.id);
+    }
+    enrolmentEmailSent = true;
   } catch (error) {
-    console.error("Welcome email failed", error);
+    console.error("Enrolment email failed", error);
   }
 
-  return publicUser(user);
+  return {
+    user: publicUser(user),
+    enrolmentEmailSent,
+    enrolmentEmailTo: user.email,
+    demoInbox:
+      user.role === Role.RESPONDENT
+        ? demoInbox({
+            to: user.email,
+            subject: user.learner
+              ? `${user.learner.displayName} has been enrolled in PVI-CAP`
+              : "You have been enrolled in PVI-CAP",
+            password: input.password,
+          })
+        : undefined,
+  };
 }
 
 export async function listUsers(query: {

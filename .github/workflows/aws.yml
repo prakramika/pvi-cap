@@ -1,0 +1,29 @@
+name: Build AWS images
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and push
+        env:
+          API_REPO: ${{ secrets.ECR_API_REPO }}
+          WEB_REPO: ${{ secrets.ECR_WEB_REPO }}
+        run: |
+          docker build -f apps/api/Dockerfile -t "$API_REPO:${GITHUB_SHA}" -t "$API_REPO:latest" .
+          docker build -f apps/web/Dockerfile -t "$WEB_REPO:${GITHUB_SHA}" -t "$WEB_REPO:latest" .
+          docker push "$API_REPO:${GITHUB_SHA}"
+          docker push "$API_REPO:latest"
+          docker push "$WEB_REPO:${GITHUB_SHA}"
+          docker push "$WEB_REPO:latest"

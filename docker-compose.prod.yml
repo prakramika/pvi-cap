@@ -1,0 +1,36 @@
+# Production stack for AWS EC2 / ECS. Postgres is RDS — not in this file.
+# Build from the repo root: docker compose -f docker-compose.prod.yml up -d --build
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      API_PORT: "4000"
+      WEB_ORIGIN: ${WEB_ORIGIN}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+      EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-info.prakramika@gmail.com}
+      INSTITUTE_URL: ${INSTITUTE_URL:-https://prakramikavocationalinstitute.com/}
+    restart: unless-stopped
+    expose:
+      - "4000"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: unless-stopped

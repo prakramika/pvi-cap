@@ -54,6 +54,21 @@ enum NotificationStatus {
   FAILED
 }
 
+enum RespondentRelation {
+  PARENT
+  GUARDIAN
+  TEACHER
+  SELF
+  OTHER
+}
+
+enum FamilyRole {
+  PARENT
+  TEACHER
+  CAREGIVER
+  CHILD
+}
+
 model User {
   id            String        @id @default(uuid())
   email         String        @unique
@@ -76,10 +91,19 @@ model User {
 model Learner {
   id               String           @id @default(uuid())
   userId           String           @unique
-  displayName      String
-  dateOfBirth      DateTime         @db.Date
-  assignedStage    AssessmentStage
-  stageOverridden  Boolean          @default(false)
+  displayName          String
+  dateOfBirth          DateTime             @db.Date
+  assignedStage        AssessmentStage
+  stageOverridden      Boolean              @default(false)
+  respondentRelation   RespondentRelation   @default(PARENT)
+  lastFamilyRole       FamilyRole?
+  gender               String?
+  diagnosis            String?
+  schoolName           String?
+  city                 String?
+  teacherEmail         String?
+  caregiverEmail       String?
+  profileCompletedAt   DateTime?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
@@ -151,6 +175,7 @@ model Question {
   type          QuestionType
   sortOrder     Int
   isQualitative Boolean      @default(false)
+  isActive      Boolean      @default(true)
   scoringNotes  String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
@@ -191,6 +216,7 @@ model AssessmentInstance {
   id              String           @id @default(uuid())
   learnerId       String
   toolId          String
+  familyRole      FamilyRole       @default(PARENT)
   stage           AssessmentStage
   status          InstanceStatus   @default(NOT_STARTED)
   progressPercent Int              @default(0)
@@ -204,8 +230,9 @@ model AssessmentInstance {
   responses Response[]
   review    Review?
 
-  @@unique([learnerId, toolId])
+  @@unique([learnerId, toolId, familyRole])
   @@index([status, submittedAt])
+  @@index([learnerId, familyRole])
 }
 
 model Response {

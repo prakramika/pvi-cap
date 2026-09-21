@@ -5,9 +5,22 @@ export type PublicLearner = {
   id: string;
   displayName: string;
   dateOfBirth: string;
+  ageYears: number;
   assignedStage: string;
   stageLabel: string;
+  stageGuidance: string;
   stageOverridden: boolean;
+  respondentRelation: string;
+  relationLabel: string;
+  lastFamilyRole: "PARENT" | "TEACHER" | "CAREGIVER" | "CHILD" | null;
+  familyRoleLabel: string | null;
+  gender: string | null;
+  diagnosis: string | null;
+  schoolName: string | null;
+  city: string | null;
+  teacherEmail: string | null;
+  caregiverEmail: string | null;
+  profileComplete: boolean;
 };
 
 export type PublicUser = {

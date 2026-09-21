@@ -22,7 +22,7 @@ usersRouter.post(
   validateBody(createUserBody),
   asyncHandler(async (req, res) => {
     const created = await users.createUser(req.body, req.auth!.userId, clientIp(req));
-    res.status(201).json({ user: created });
+    res.status(201).json(created);
   }),
 );
 

@@ -15,6 +15,37 @@ export const STAGE_LABELS: Record<AssessmentStage, string> = {
   ADVANCED: "Advanced",
 };
 
+export const STAGE_GUIDANCE: Record<AssessmentStage, string> = {
+  EARLY_CHILDHOOD:
+    "For young children. A parent, guardian, or teacher answers by watching the child. The child does not need an email or a login.",
+  PRE_SKILL:
+    "For developing independence. An adult usually answers, with the child nearby if that feels comfortable.",
+  BASIC:
+    "The child may join in. An adult still signs in and can pause whenever the child needs a break.",
+  INTERMEDIATE:
+    "The young person can take part more directly, with a trusted adult close by.",
+  ADVANCED:
+    "The young person may use their own sign-in, or a parent may still complete it with them.",
+};
+
+export const RELATION_LABELS: Record<
+  "PARENT" | "GUARDIAN" | "TEACHER" | "SELF" | "OTHER",
+  string
+> = {
+  PARENT: "Parent",
+  GUARDIAN: "Caregiver",
+  TEACHER: "Teacher",
+  SELF: "Child",
+  OTHER: "Caregiver",
+};
+
+export const FAMILY_ROLE_LABELS: Record<"PARENT" | "TEACHER" | "CAREGIVER" | "CHILD", string> = {
+  PARENT: "Parent",
+  TEACHER: "Teacher",
+  CAREGIVER: "Caregiver",
+  CHILD: "Child",
+};
+
 export function ageYearsFromDob(dateOfBirth: Date, on: Date = new Date()): number {
   let years = on.getUTCFullYear() - dateOfBirth.getUTCFullYear();
   const monthDelta = on.getUTCMonth() - dateOfBirth.getUTCMonth();
