@@ -5,6 +5,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Pages must be turned on once in the repo:
+# Settings → Pages → Build and deployment → Source → GitHub Actions
+# The default GITHUB_TOKEN cannot create that Pages site.
+
 permissions:
   contents: read
   pages: write
@@ -21,10 +25,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
       - run: npm ci
       - name: Build present-only site
@@ -34,9 +38,9 @@ jobs:
         run: npm run build -w @pvi-cap/web
       - name: SPA fallback
         run: cp apps/web/dist/index.html apps/web/dist/404.html
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: apps/web/dist
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
